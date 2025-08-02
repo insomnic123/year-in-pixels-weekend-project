@@ -9,9 +9,8 @@ export default function YearInPixels() {
   const [quoteAuthor, setQuoteAuthor] = useState('');
   const [isLoadingQuote, setIsLoadingQuote] = useState(true);
   const [viewMode, setViewMode] = useState('year');
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth()); 
-  
-  // AI generated color options from sad (blue) to happy (red), plus clear option
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+
   const colors = [
     { name: 'Clear', color: 'bg-white border-2 border-gray-400 border-dashed', value: null },
     { name: 'Very Sad', color: 'bg-blue-600', value: 'blue-600' },
@@ -28,7 +27,6 @@ export default function YearInPixels() {
     return Math.floor(diff / (1000 * 60 * 60 * 24));
   };
 
-  // Ai generated quotes heh
   const inspirationalQuotes = [
     { content: "The best time to plant a tree was 20 years ago. The second best time is now.", author: "Chinese Proverb" },
     { content: "Your limitation—it's only your imagination.", author: "Unknown" },
@@ -52,7 +50,23 @@ export default function YearInPixels() {
     { content: "Be the change that you wish to see in the world.", author: "Mahatma Gandhi" }
   ];
 
-  const fetchInspirationalQuote = () => {
+  useEffect(() => {
+    setSelectedDay(getCurrentDayOfYear());
+
+    const fetchInspirationalQuote = () => {
+      setIsLoadingQuote(true);
+      setTimeout(() => {
+        const randomQuote = inspirationalQuotes[Math.floor(Math.random() * inspirationalQuotes.length)];
+        setQuote(randomQuote.content);
+        setQuoteAuthor(randomQuote.author);
+        setIsLoadingQuote(false);
+      }, 500);
+    };
+
+    fetchInspirationalQuote();
+  }, []);
+
+  const handleNewQuote = () => {
     setIsLoadingQuote(true);
     setTimeout(() => {
       const randomQuote = inspirationalQuotes[Math.floor(Math.random() * inspirationalQuotes.length)];
@@ -62,27 +76,14 @@ export default function YearInPixels() {
     }, 500);
   };
 
-  useEffect(() => {
-    setSelectedDay(getCurrentDayOfYear());
-    fetchInspirationalQuote();
-  }, []);
-
   const generateDays = () => {
-    if (viewMode === 'month') {
-      return generateMonthDays();
-    }
-    
+    if (viewMode === 'month') return generateMonthDays();
+
     const days = [];
     const jan1 = new Date(2025, 0, 1);
     const startDay = jan1.getDay();
-    
-    for (let i = 0; i < startDay; i++) {
-      days.push(null);
-    }
-    
-    for (let i = 1; i <= 365; i++) {
-      days.push(i);
-    }
+    for (let i = 0; i < startDay; i++) days.push(null);
+    for (let i = 1; i <= 365; i++) days.push(i);
     return days;
   };
 
@@ -92,16 +93,13 @@ export default function YearInPixels() {
     const lastDay = new Date(2025, selectedMonth + 1, 0);
     const startDay = firstDay.getDay();
     const daysInMonth = lastDay.getDate();
-    
-    for (let i = 0; i < startDay; i++) {
-      days.push(null);
-    }
-    
+
+    for (let i = 0; i < startDay; i++) days.push(null);
     for (let i = 1; i <= daysInMonth; i++) {
       const dayOfYear = getDayOfYear(2025, selectedMonth, i);
       days.push(dayOfYear);
     }
-    
+
     return days;
   };
 
@@ -121,7 +119,7 @@ export default function YearInPixels() {
   };
 
   const getDayDate = (dayNumber) => {
-    const date = new Date(2025, 0, dayNumber); 
+    const date = new Date(2025, 0, dayNumber);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
@@ -146,47 +144,45 @@ export default function YearInPixels() {
   const downloadAsPNG = () => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
-    const scale = 4; 
-    const boxSize = 20 * scale; 
-    const gapSize = 4 * scale; 
+    const scale = 4;
+    const boxSize = 20 * scale;
+    const gapSize = 4 * scale;
     const totalBoxSize = boxSize + gapSize;
     const cols = 7;
     const rows = Math.ceil(days.length / cols);
-    
+
     canvas.width = (cols * totalBoxSize) - gapSize;
     canvas.height = (rows * totalBoxSize) - gapSize;
-    
+
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
+
     const colorMap = {
       'blue-600': '#2563eb',
-      'blue-300': '#93c5fd',  
+      'blue-300': '#93c5fd',
       'gray-300': '#d1d5db',
       'orange-400': '#fb923c',
       'red-500': '#ef4444',
     };
-    
+
     days.forEach((dayNumber, index) => {
       const row = Math.floor(index / cols);
       const col = index % cols;
       const x = col * totalBoxSize;
       const y = row * totalBoxSize;
-      
+
       if (dayNumber !== null) {
         const dayColor = dayColors[dayNumber];
         ctx.fillStyle = dayColor ? colorMap[dayColor] : '#ffffff';
         ctx.fillRect(x, y, boxSize, boxSize);
-        
         ctx.strokeStyle = '#d1d5db';
         ctx.lineWidth = 2 * scale;
         ctx.strokeRect(x, y, boxSize, boxSize);
       }
     });
-    
+
     const link = document.createElement('a');
-    const fileName = viewMode === 'month' 
+    const fileName = viewMode === 'month'
       ? `${getMonthName(selectedMonth).toLowerCase()}-${new Date().getFullYear()}-pixels.png`
       : `year-in-pixels-${new Date().getFullYear()}.png`;
     link.download = fileName;
@@ -204,37 +200,36 @@ export default function YearInPixels() {
         </h1>
         <p className="text-gray-600 text-center mb-6">
           2025 Mood Tracker - <strong>Frontend Demo</strong>
-          <br></br>
-          This is a simple mood tracker that lets you visualize your mood over the year. Database and backend are <strong>NOT IMPLEMENTED</strong> <br></br>
-          meaning this is just a frontend demo. Next step is to implement OAuth and a DB so people can use it :) <br></br>
+          <br />
+          This is a simple mood tracker that lets you visualize your mood over the year. Database and backend are <strong>NOT IMPLEMENTED</strong>
+          <br />
+          meaning this is just a frontend demo. Next step is to implement OAuth and a DB so people can use it :) <br />
           Click on a day to select it, then choose a mood color!
         </p>
-        
+
         <div className="bg-white rounded-lg shadow-md p-4 mb-6">
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
             <div className="flex gap-2">
               <button
                 onClick={() => setViewMode('year')}
-                className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
-                  viewMode === 'year' 
-                    ? 'bg-purple-600 text-white' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`px-4 py-2 rounded-lg transition-colors duration-200 ${viewMode === 'year'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 Year View
               </button>
               <button
                 onClick={() => setViewMode('month')}
-                className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
-                  viewMode === 'month' 
-                    ? 'bg-purple-600 text-white' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                className={`px-4 py-2 rounded-lg transition-colors duration-200 ${viewMode === 'month'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
               >
                 Month View
               </button>
             </div>
-            
+
             {viewMode === 'month' && (
               <select
                 value={selectedMonth}
@@ -250,7 +245,7 @@ export default function YearInPixels() {
             )}
           </div>
         </div>
-        
+
         <div className="flex flex-row gap-6 justify-center items-start">
           <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
             {viewMode === 'month' && (
@@ -258,7 +253,6 @@ export default function YearInPixels() {
                 {getMonthName(selectedMonth)} 2025
               </h3>
             )}
-            
             <div className="grid grid-cols-7 gap-1 mb-3">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
                 <div key={day} className="text-center text-xs font-medium text-gray-600 w-4">
@@ -266,31 +260,21 @@ export default function YearInPixels() {
                 </div>
               ))}
             </div>
-            
+
             <div className="grid grid-cols-7 gap-1">
               {days.map((dayNumber, index) => {
                 if (dayNumber === null) {
-                  return (
-                    <div
-                      key={`empty-${index}`}
-                      className="w-4 h-4"
-                    />
-                  );
+                  return <div key={`empty-${index}`} className="w-4 h-4" />;
                 }
-                
                 const isSelected = selectedDay === dayNumber;
                 const dayColor = dayColors[dayNumber];
-                
                 return (
                   <button
                     key={dayNumber}
                     onClick={() => handleDayClick(dayNumber)}
                     className={`
                       w-4 h-4 border transition-all duration-200 hover:scale-125
-                      ${isSelected 
-                        ? 'border-gray-800 border-2 shadow-lg z-10 relative' 
-                        : 'border-gray-300 hover:border-gray-500'
-                      }
+                      ${isSelected ? 'border-gray-800 border-2 shadow-lg z-10 relative' : 'border-gray-300 hover:border-gray-500'}
                       ${dayColor ? `bg-${dayColor}` : 'bg-white hover:bg-gray-100'}
                     `}
                     title={getDayDate(dayNumber)}
@@ -300,7 +284,7 @@ export default function YearInPixels() {
                 );
               })}
             </div>
-            
+
             {selectedDay && (
               <div className="mt-4 text-center text-gray-600 text-sm">
                 Selected: Day {selectedDay} ({getDayDate(selectedDay)})
@@ -318,20 +302,19 @@ export default function YearInPixels() {
               ) : (
                 <>
                   <blockquote className="text-base italic text-gray-700 mb-2 text-center">
-                    "{quote}"
+                    &quot;{quote}&quot;
                   </blockquote>
                   <cite className="text-sm text-gray-500 text-center block">— {quoteAuthor}</cite>
                 </>
               )}
               <button
-                onClick={fetchInspirationalQuote}
+                onClick={handleNewQuote}
                 className="text-gray-800 mt-3 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200 w-full"
               >
                 New Quote
               </button>
             </div>
 
-            {/* Mood Colors */}
             <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
               <h2 className="text-lg font-semibold text-gray-800 mb-4 text-center">
                 Mood Colors
@@ -363,7 +346,7 @@ export default function YearInPixels() {
                   </div>
                 ))}
               </div>
-              
+
               {selectedDay === null && (
                 <div className="mt-4 text-sm text-gray-500 text-center">
                   Select a day first to assign a mood color
